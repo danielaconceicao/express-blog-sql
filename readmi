@@ -1,0 +1,252 @@
+/* Formulário de Envio: O handleSubmit precisa coletar os dados de todos os campos do formulário. O valor do image, title, content, tags, e published precisa ser gerenciado de forma correta.
+
+Função de Atualização e Exclusão: Precisamos adicionar as funcionalidades de editar e excluir posts.
+
+Melhorando o Estado: Vamos usar o estado para controlar o formulário e garantir que os dados sejam enviados corretamente. */
+
+
+import { useEffect, useState } from 'react'
+import './App.css'
+
+
+function App() {
+  const [postsData, setPostsData] = useState([])
+  //controlar o formulario e garante que os dados sejam enviados corretamente
+  const [formData, setFormData] = useState({
+    image: '',
+    title: '',
+    content: '',
+    tags: '',
+    published: false,
+  })
+
+
+  function fetchPosts(url = 'http://localhost:3001/posts') {
+    fetch(url)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Erro ao buscar posts: ' + res.statusText);
+        }
+        return res.json() // converte a resposta em json
+      })
+      .then(data => {
+        console.log(data)
+        setPostsData(data.data)// a resposta tem a chave data com os posts
+      })
+      .catch(error => {
+        console.error('Erro na requisição fetchPosts:', error);
+      });
+  }
+
+  useEffect(fetchPosts, []);
+
+  function handleSubmit(e) {
+    e.preventDefault()
+
+    const sendData = {
+      image: formData.image,
+      title: formData.title,
+      content: formData.content,
+      tags: formData.tags.split(',').map(tag => tag.trim()),
+      published: formData.published,
+      slug: formData.title.toLowerCase().replace(/\s+/g, '-'),//gera o slug baseado no titulo
+    }
+
+    const method = formData.id ? 'PUT' : 'POST'
+    const url = formData.id ? `http://localhost:3001/posts/${formData.slug}` : 'http://localhost:3001/posts'
+
+    fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(sendData),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Erro ao salvar o post: ' + res.statusText);
+        }
+        res.json()
+      })
+      .then((data) => {
+        console.log(data)
+        fetchPosts()// atualiaza os posts apos o envio
+
+        setFormData({
+          imag: '',
+          title: '',
+          content: '',
+          tags: '',
+          published: false
+        })//limpa o formulario
+      })
+
+      .catch((error) => {
+        console.error('Erro ao enviar dados do formulário:', error)
+      })
+  }
+
+  function handleEdit(post) {
+    setFormData({
+      id: post.id,
+      image: post.image,
+      title: post.title,
+      content: post.content,
+      tags: post.tags.join(', '),
+      published: post.published
+    })
+  }
+
+  function handleDelete(slug) {
+    fetch(`http://localhost:3001/posts/${slug}`, {
+      method: 'DELETE',
+    })
+
+      .then(res => res.json())
+      .then(data => {
+        console.log(data)
+        fetchPosts()// atualiza a lista apos a exclusao
+      })
+  }
+
+  function handleChange(e) {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
+    })
+  }
+  console.log(postsData)
+  console.log(formData)
+  return (
+    <>
+      <div className='container'>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label htmlFor="image" className="form-label">Image</label>
+            <input
+              type="text"
+              className="form-control"
+              name="image"
+              id="image"
+              aria-describedby="imagehelper"
+              placeholder="/images/1.jpg"
+              value={formData.image || ''}
+              onChange={handleChange}
+            />
+            <small id="imagehelper" className="form-text text-muted"></small>
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="title" className="form-label">Title</label>
+            <input
+              type="text"
+              className="form-control"
+              name="title"
+              id="title"
+              aria-describedby="titlehelper"
+              placeholder="Title blog"
+              value={formData.title || ''}
+              onChange={handleChange}
+            />
+            <small id="titlehelper" className="form-text text-muted"></small>
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="content" className="form-label">Content</label>
+            <textarea
+              className="form-control"
+              id="Content"
+              rows="3"
+              name='content'
+              value={formData.content || ''}
+              onChange={handleChange}
+            />
+          </div>
+
+
+          <div className="mb-3">
+            <label htmlFor="tags" className="form-label">Tags</label>
+            <input
+              type="text"
+              className="form-control"
+              name="tags"
+              id="tags"
+              aria-describedby="tagshelper"
+              placeholder="Antipasti, Ricette vegetariane, Ricette al forno"
+              value={formData.tags || ''}
+              onChange={handleChange}
+            />
+            <small id="tagshelper" className="form-text text-muted"></small>
+          </div>
+
+          <div className="form-check mb-3">
+            <input
+              id="published"
+              name='published'
+              type="checkbox"
+              className="form-check-input"
+              checked={formData.published || ''}
+              onChange={handleChange}
+
+            />
+            <label className="form-check-label" htmlFor=""> Published </label>
+          </div>
+
+
+          <button
+            type="submit"
+            className="btn btn-secondary"
+          >
+            {formData.id ? 'Update Post' : 'Create Post'}
+            Submit
+          </button>
+        </form>
+
+        <div className='row row-cols-1 row-cols-md-2 row-cols-lg-3'>
+          {postsData.length > 0 ? postsData.map(post => (
+            <div className='col py-3' key={post.id}>
+              <div className='card test'>
+                <img src={`http://localhost:3001/image/${post.image}`} className="card-img-top" />
+                <div className="card-body">
+                  <h5 className="card-title">{post.title}</h5>
+                  <p className="card-text">Ricetta: {post.content}</p>
+                  <p className="card-text">Tags: {post.tags.join(', ')}</p>
+                  <p className='card-text'>Published: {post.published ? 'Publishable' : 'Unpublishable'}</p>
+                  <div>
+                    <button onClick={() => handleEdit(post)} type='button' className='btn btn-primary mx-2'><i className="bi bi-pencil">edit</i></button>
+                    <button onClick={() => handleDelete(post.slug)} type='button' className='btn btn-primary'><i className="bi bi-trash3">Delete</i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )) : <p>the document has not been uploaded yet</p>}
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default App
+
+
+
+/* Manipulação do Formulário:
+
+O formulário agora utiliza o estado formData para controlar os dados dos campos.
+A função handleChange lida com a atualização do estado com base nos inputs.
+O estado do formulário é limpo após a submissão.
+Edição de Post:
+
+Quando um post é clicado para edição, seus dados são carregados nos campos do formulário para edição.
+O botão de envio muda para "Update Post" quando há um post a ser editado.
+Exclusão de Post:
+
+O botão "Delete" agora chama a função handleDelete para excluir o post da API.
+Carregamento e Exibição dos Posts:
+
+A lista de posts é exibida após ser carregada via fetchPosts.
+Cada post tem opções para editar e deletar.
+2. Testando o Código
+Certifique-se de que a API (Node.js) esteja em execução na URL http://localhost:3001.
+Teste as funcionalidades de criar, editar e excluir posts a partir da interface do React. */
