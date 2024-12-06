@@ -13,7 +13,7 @@ const show = (req, res) => {
     }
 
     return res.status(200).json({
-        data: post
+        data: post//nao funciona
     });
 }
 
