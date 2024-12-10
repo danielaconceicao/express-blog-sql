@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
-const postsRouter = require('../express-blog-api-crud/router/posts');
+const postsRouter = require('./router/posts');
 const notFoundMiddleware = require('./middleware/notfound');
 const handleMiddleware = require('./middleware/serverError');
 const cors = require('cors')
-const HOST = 'http://localhost'
+const HOST = 'http://localhost' 
 const PORT = 3001
 
 app.use(express.static('public'))
@@ -26,4 +26,3 @@ app.use('/posts', postsRouter);
 app.use(notFoundMiddleware);
 
 app.use(handleMiddleware);
-  

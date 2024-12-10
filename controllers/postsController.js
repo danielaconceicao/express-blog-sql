@@ -1,35 +1,38 @@
 /* const posts = require('../database/db.js');
-const fs = require('fs'); */
+const fs = require('fs');  */
 const connection = require('../database/connectiondb.js')
 
 
 const index = (req, res) => {
+
     const sql = 'SELECT * FROM posts';
 
-    connection.query(sql, (err, posts) => {
-        if(err) return res.status(500).json({error: 'Database query failed'})
-        res.json(posts)
-    })
-    
-    const responseData = {
-        data: posts,
-        counter: posts.length
-    }
+    connection.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: 'err' })
 
-    res.status(200).json(responseData)
+
+        const responseData = {
+            data: results,
+            counter: results.length
+        }
+
+
+        res.status(200).json(responseData)
+       
+    })
 
 }
 
 
 const show = (req, res) => {
-    
+
     const id = req.params.id;
-    
+
     const sql = 'SELECT * FROM posts WHERE id=?'
 
 
     connection.query(sql, [id], (err, results) => {
-        
+
         if (err) return res.status(500).json({ error: 'Database query failed' });
         if (results.length === 0) return res.status(404).json({ error: `404! Not found` })
         res.json(results[0])
@@ -48,11 +51,11 @@ const show = (req, res) => {
     }); */
 
 }
-    
 
-const store = (req, res) => {
+
+/* const store = (req, res) => {
     const post = {
-        
+
         title: req.body.title,
         slug: req.body.slug,
         content: req.body.content,
@@ -62,7 +65,7 @@ const store = (req, res) => {
 
     posts.push(post);
     fs.writeFileSync('./database/db.js', `module.exports = ${JSON.stringify(posts, null, 4)}`);
-    
+
     //console.log(req.body)
     return res.status(201).json({
         status: 201,
@@ -75,7 +78,7 @@ const store = (req, res) => {
 const update = (req, res) => {
     const post = posts.find(postEl => postEl.slug.toLowerCase() === req.params.slug);
 
-    if(!post){
+    if (!post) {
         return res.status(404).json({
             error: `Not found`
         });
@@ -93,7 +96,7 @@ const update = (req, res) => {
         status: 200,
         data: posts
     });
-}
+} */
 
 const destroy = (req, res) => {
 
@@ -105,7 +108,7 @@ const destroy = (req, res) => {
     connection.query(sql, [id], (err, results) => {
         console.log(err, results);
         if (err) return res.status(500).json({ error: err })
-        
+
         if (results.affectedRows === 0) return res.status(404).json({ error: `404! No post found with the this id: ${id}` })
 
         return res.json({ status: 204, affectedRows: results.affectedRows })
@@ -135,9 +138,9 @@ const destroy = (req, res) => {
 
 
 module.exports = {
-    store, 
+   /*  store, */
     index,
     show,
-    update,
+    /* update, */
     destroy
 }
